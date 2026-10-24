@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Ventanita flotante con la conversación del asistente de voz (Alt+Z)
+printf '\e]2;Asistente de voz\a\e[?25l'
+clear
+exec tail -n 30 -F ~/.local/state/voz-es/conversacion.log 2>/dev/null

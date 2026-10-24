@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Asistente de voz en español local (Whisper + LFM2.5 + Kokoro) en http://localhost:7861
+# Voz masculina: VOZ=em_alex voz-es
+systemctl --user stop voz-es 2>/dev/null  # libera la GPU; Alt+Z lo vuelve a arrancar
+cd ~/voz-es || exit 1
+(until curl -s -o /dev/null http://127.0.0.1:7861; do sleep 1; done; xdg-open http://localhost:7861 >/dev/null 2>&1) &
+exec mise exec uv -- uv run python app.py

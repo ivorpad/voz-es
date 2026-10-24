@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Demo de voz LFM2.5-Audio-1.5B (solo inglés) en http://localhost:7860
+systemctl --user stop voz-es 2>/dev/null  # libera la GPU; Alt+Z lo vuelve a arrancar
+cd ~/lfm-audio || exit 1
+(sleep 25 && xdg-open http://localhost:7860 >/dev/null 2>&1) &
+export NO_TORCH_COMPILE=1  # la GTX 1070 (sm_61) no soporta Triton/torch.compile
+exec mise exec uv -- uv run liquid-audio-demo

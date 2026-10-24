@@ -1,0 +1,26 @@
+[project]
+name = "voz-es"
+version = "0.1.0"
+requires-python = "==3.12.15"
+dependencies = [
+    "torch>=2.8.0",
+    "transformers>=4.55.4",
+    "accelerate>=1.10.1",
+    "faster-whisper>=1.1.0",
+    "kokoro>=0.9.4",
+    "fastrtc[vad]>=0.0.30",
+    "soundfile",
+]
+
+[tool.uv]
+# Mitigación supply-chain: ignora paquetes publicados en los últimos 14 días
+exclude-newer = "2026-10-10T00:00:00Z"
+
+# CUDA 12.6: últimos builds de PyTorch que aún incluyen la GTX 1070 (Pascal, sm_61)
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu126" }

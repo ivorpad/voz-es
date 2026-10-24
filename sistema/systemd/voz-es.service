@@ -1,0 +1,14 @@
+[Unit]
+Description=Asistente de voz local en español (Alt+Z)
+After=graphical-session.target pipewire.service
+PartOf=graphical-session.target
+
+[Service]
+WorkingDirectory=%h/voz-es
+ExecStart=%h/voz-es/.venv/bin/python -u asistente.py
+Restart=on-failure
+RestartSec=5
+Environment=HF_HUB_OFFLINE=1
+
+[Install]
+WantedBy=graphical-session.target

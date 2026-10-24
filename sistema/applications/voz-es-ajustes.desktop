@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Asistente de voz
+GenericName=Ajustes del asistente de voz (Alt+Z)
+Comment=Posición, tamaño y opacidad de la ventanita, y la voz
+Exec=/usr/bin/python3 /home/juanpablo/voz-es/ajustes.py
+Icon=audio-input-microphone
+Terminal=false
+Categories=Settings;Utility;
+Keywords=voz;asistente;alt+z;ajustes;micrófono;
+StartupWMClass=org.omarchy.voz-es.ajustes

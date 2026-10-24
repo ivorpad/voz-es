@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Llamado por Hyprland con Alt+Z: "down" al pulsar, "up" al soltar.
+fifo="${XDG_RUNTIME_DIR:-/tmp}/voz-es.fifo"
+if ! systemctl --user is-active -q voz-es; then
+  systemctl --user start voz-es
+  notify-send -u low "Asistente de voz" "Cargando modelos… prueba Alt+Z en unos segundos"
+  exit 0
+fi
+[[ -p $fifo ]] && timeout 1 bash -c "echo $1 > '$fifo'"
