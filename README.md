@@ -8,7 +8,7 @@ La ventanita que aparece abajo a la derecha al pulsar Alt+Z:
 
 ![Ventanita del asistente](docs/ventanita.png)
 
-Whisper large-v3-turbo (oído, local) → reglas locales para órdenes habituales → `claude -p --model haiku` para el resto → Kokoro-82M (voz, local).
+Nemotron 3.5 ASR streaming (oído, local, el mismo modelo que Handy, vía transcribe.cpp/Vulkan; Whisper de respaldo) → reglas locales para órdenes habituales → `claude -p --model haiku` para el resto → Kokoro-82M (voz, local).
 
 - `asistente.py`: el servicio de Alt+Z (`sistema/systemd/voz-es.service`).
 - `ajustes.py`: app «Asistente de voz» (GTK4 + libadwaita) para posición, tamaño, opacidad y voz de la ventanita.

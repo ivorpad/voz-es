@@ -2206,6 +2206,31 @@ wheels = [
 ]
 
 [[package]]
+name = "transcribe-cpp"
+version = "0.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "transcribe-cpp-native" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e2/e4/f0012ef550821be2d88b82ee8b8b8b81272cef9968be7625d14f2e7117db/transcribe_cpp-0.3.1.tar.gz", hash = "sha256:33d472c7013aa27cadda5c38339b9da9eb64e20fc126cd3d5689a1c10732abbc", size = 96996, upload-time = "2026-10-04T08:01:46.5Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/09/ef/79701b9bef611f7f14f97869db7692e04c647d95dcb3418caebe5520ed29/transcribe_cpp-0.3.1-py3-none-any.whl", hash = "sha256:af815ea64a996e51b6f72884606bbdb400fa4bd4e6a667caef16954b86d44f34", size = 36425, upload-time = "2026-10-04T08:01:32.405Z" },
+]
+
+[[package]]
+name = "transcribe-cpp-native"
+version = "0.3.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/62/63/203bc8bd725fafda458c61538fbf1054b92476f656c2130526016a3fc6d6/transcribe_cpp_native-0.3.1.tar.gz", hash = "sha256:7512adfd409fca9cacd753d5172f833b0725a9e7400aaf21a8356966bd892fa4", size = 4244761, upload-time = "2026-10-04T08:01:47.803Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ba/0d/d812ad4176cdb1fd6406e7caf2394da6eca7d9db422d1a7a9b1696b2cb10/transcribe_cpp_native-0.3.1-py3-none-macosx_11_0_arm64.whl", hash = "sha256:8b5fe9f76fcb88d64981c55837f74bd0ccba013ac7f1487216a59a1ef8dadc82", size = 1826411, upload-time = "2026-10-04T08:01:34.138Z" },
+    { url = "https://files.pythonhosted.org/packages/03/9d/7ab7c0215f393bfaf8581217972ff12ec7044026506001b5d9439ecbfd60/transcribe_cpp_native-0.3.1-py3-none-macosx_11_0_x86_64.whl", hash = "sha256:a03335e8512b0f8a35ed6b3409beca6530161060dbf5f6d31615cca51edf3abd", size = 1539448, upload-time = "2026-10-04T08:01:36.015Z" },
+    { url = "https://files.pythonhosted.org/packages/6b/95/f7eb1c286a40f24408b5fd57a55e40ddc4e1bffb0ed85265165977bdcf5b/transcribe_cpp_native-0.3.1-py3-none-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:cffc38c389fb5933270c6b7e282c18dcb5b88798005c021a4f6644372d3f9ffa", size = 18004865, upload-time = "2026-10-04T08:01:38.193Z" },
+    { url = "https://files.pythonhosted.org/packages/69/e4/8eb5fe1fbf5c6519289ab1876828b6c9183456803d3135160422279392af/transcribe_cpp_native-0.3.1-py3-none-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:9647bff7a7486810c2778fb9b86a6ac0302688620bfad8f31b560697423641aa", size = 21876047, upload-time = "2026-10-04T08:01:41.271Z" },
+    { url = "https://files.pythonhosted.org/packages/80/9b/7264a0310928a64174e3f430dd09b3c1b458dc1455e90a84b58a7932e511/transcribe_cpp_native-0.3.1-py3-none-win_amd64.whl", hash = "sha256:8bb3e962cf9405054129a8ca9ecf9c9df7f4f044b9d6467bf94d5823ff1c9533", size = 17663856, upload-time = "2026-10-04T08:01:44.189Z" },
+]
+
+[[package]]
 name = "transformers"
 version = "5.19.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2321,6 +2346,7 @@ dependencies = [
     { name = "kokoro" },
     { name = "soundfile" },
     { name = "torch" },
+    { name = "transcribe-cpp" },
     { name = "transformers" },
 ]
 
@@ -2332,6 +2358,7 @@ requires-dist = [
     { name = "kokoro", specifier = ">=0.9.4" },
     { name = "soundfile" },
     { name = "torch", specifier = ">=2.8.0", index = "https://download.pytorch.org/whl/cu126" },
+    { name = "transcribe-cpp", specifier = "==0.3.1" },
     { name = "transformers", specifier = ">=4.55.4" },
 ]
 

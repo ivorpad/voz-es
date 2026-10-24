@@ -27,7 +27,7 @@ from pathlib import Path
 
 import numpy as np
 from faster_whisper.vad import VadOptions, get_speech_timestamps
-from modelos import VOZ, sintetizar, transcribir
+from modelos import VOZ, EnDirecto, oido, sintetizar, transcribir
 
 FIFO = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "voz-es.fifo"
 AJUSTES = Path.home() / ".config/voz-es/ajustes.json"
@@ -85,8 +85,16 @@ def ajustes() -> dict:
 
 
 def escribir(linea: str):
+    # \r + borrar línea: sustituye lo que estuviera a medias (el texto en directo)
     with LOG.open("a") as f:
-        f.write(linea + "\n")
+        f.write("\r\033[2K" + linea + "\n")
+
+
+def escribir_parcial(texto: str):
+    """Lo que vas diciendo, en la última línea de la ventanita (sin salto: se va reescribiendo)."""
+    texto = texto if len(texto) <= 40 else "…" + texto[-39:]
+    with LOG.open("a") as f:
+        f.write(f"\r\033[2K\033[36m> {texto}\033[0m")
 
 
 DIAS = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
@@ -484,18 +492,19 @@ class Asistente:
 
     def _conversar(self, turno: int):
         while self.conversando and self.turno == turno:
-            audio = self._escuchar(turno)
-            if audio is None:
+            escuchado = self._escuchar(turno)
+            if escuchado is None:
                 return
             try:
-                self.procesar(audio, turno)
+                self.procesar(escuchado[0], turno, escuchado[1])
             except Exception:  # que un fallo suelto no acabe con la conversación
                 traceback.print_exc()
                 escribir("\033[2m   (algo ha fallado; sigo escuchando)\033[0m")
             self.voz.esperar(turno, self)
 
-    def _escuchar(self, turno: int) -> np.ndarray | None:
-        """Graba hasta que dejas de hablar. None si se cancela o si pasa mucho rato sin que hables."""
+    def _escuchar(self, turno: int) -> tuple[np.ndarray, str | None] | None:
+        """Graba hasta que dejas de hablar y devuelve (audio, texto). None si se cancela o si pasa
+        mucho rato sin que hables. Con Nemotron el texto sale en directo en la ventanita."""
         pitido(880)
         with self.lock:
             if self.turno != turno:
@@ -503,35 +512,50 @@ class Asistente:
             self.grab.empezar()
         escribir("\033[2m🎙 escuchando…\033[0m")
         vad = VadOptions(min_silence_duration_ms=300, speech_pad_ms=100)
-        while True:
-            time.sleep(0.2)
-            if self.turno != turno:
-                return None
-            audio = self.grab.audio()
-            dur = len(audio) / 16_000
-            voz = get_speech_timestamps(audio, vad) if dur > 0.5 else []
-            if (voz and (len(audio) - voz[-1]["end"]) / 16_000 > SILENCIO_FIN) or dur > 60:
-                with self.lock:
-                    if self.turno != turno:
-                        return None
-                    audio = self.grab.parar()
-                pitido(660)
-                return audio
-            if not voz and dur > INACTIVIDAD:
-                with self.lock:
-                    if self.turno != turno:
-                        return None
-                    self.grab.parar()
-                    self.conversando = False
-                escribir("\033[2m— fin (sin actividad) —\033[0m")
-                cerrar_panel()
-                return None
+        directo = EnDirecto() if oido else None
+        enviado, mostrado = 0, ""
+        try:
+            while True:
+                time.sleep(0.2)
+                if self.turno != turno:
+                    return None
+                audio = self.grab.audio()
+                dur = len(audio) / 16_000
+                if directo and len(audio) > enviado:
+                    directo.feed(audio[enviado:])
+                    enviado = len(audio)
+                    if (t := directo.texto()) and t != mostrado:
+                        escribir_parcial(mostrado := t)
+                voz = get_speech_timestamps(audio, vad) if dur > 0.5 else []
+                if (voz and (len(audio) - voz[-1]["end"]) / 16_000 > SILENCIO_FIN) or dur > 60:
+                    with self.lock:
+                        if self.turno != turno:
+                            return None
+                        audio = self.grab.parar()
+                    pitido(660)
+                    if directo:
+                        directo.feed(audio[enviado:])
+                        return audio, directo.final()
+                    return audio, None
+                if not voz and dur > INACTIVIDAD:
+                    with self.lock:
+                        if self.turno != turno:
+                            return None
+                        self.grab.parar()
+                        self.conversando = False
+                    escribir("\033[2m— fin (sin actividad) —\033[0m")
+                    cerrar_panel()
+                    return None
+        finally:
+            if directo:
+                directo.cerrar()
 
     # --- cerebro ---
-    def procesar(self, audio: np.ndarray, turno: int):
+    def procesar(self, audio: np.ndarray, turno: int, texto: str | None = None):
         if len(audio) < 16_000 * 0.3:
             return
-        texto = transcribir(audio)
+        if texto is None:
+            texto = transcribir(audio)
         if not texto:
             escribir("\033[2m   (no te he entendido)\033[0m")
             return
