@@ -2,6 +2,8 @@
 
 Asistente de voz en español para Omarchy (Hyprland): pulsa Alt+Z, habla y te contesta mientras controla el escritorio.
 
+La idea fue de Juan Pablo, que quería manejar su ordenador con la voz.
+
 ![App de ajustes «Asistente de voz» y la ventanita de la conversación](docs/captura.png)
 
 La ventanita que aparece abajo a la derecha al pulsar Alt+Z:
