@@ -12,9 +12,11 @@ import ast
 import configparser
 import datetime
 import difflib
+import getpass
 import json
 import traceback
 import os
+import pwd
 import re
 import shutil
 import subprocess
@@ -40,9 +42,16 @@ INACTIVIDAD = 60  # s sin que hables para terminar la conversación sola
 NUEVA = re.compile(r"\b(nueva (conversacion|sesion)|(empieza(mos)?|empecemos|empezamos) de (cero|nuevo)|olvida (todo|la conversacion)|borra la conversacion)\b")
 OLVIDO = 300  # s sin hablar tras los que se olvida la conversación
 
+USUARIO = getpass.getuser()
+try:  # cómo te llama: «nombre» en ajustes.json, si no el nombre completo del sistema
+    NOMBRE = json.loads(AJUSTES.read_text()).get("nombre", "")
+except (FileNotFoundError, json.JSONDecodeError):
+    NOMBRE = ""
+NOMBRE = NOMBRE or pwd.getpwnam(USUARIO).pw_gecos.split(",")[0] or USUARIO
+
 SYSTEM = (
-    "Eres el asistente de voz del ordenador de Juan Pablo: Arch Linux con Omarchy y Hyprland 0.56 (configuración en Lua), "
-    "usuario juanpablo, home /home/juanpablo. Te habla por voz y tu respuesta se lee en voz alta con un sintetizador: "
+    f"Eres el asistente de voz del ordenador de {NOMBRE}: Arch Linux con Omarchy y Hyprland 0.56 (configuración en Lua), "
+    f"usuario {USUARIO}, home {Path.home()}. Te habla por voz y tu respuesta se lee en voz alta con un sintetizador: "
     "responde siempre en español de España, en una o dos frases cortas, sin markdown, sin listas, sin emojis, sin rutas "
     "ni comandos en el texto salvo que te los pida.\n"
     "Si te pide hacer algo en el ordenador, hazlo con Bash sin preguntar y confirma en pocas palabras. Pistas:\n"

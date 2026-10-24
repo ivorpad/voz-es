@@ -155,7 +155,7 @@ class Ventana(Adw.ApplicationWindow):
 
     def _aplicar(self):
         """Guarda y, si la ventanita está abierta, la reabre para que coja los cambios."""
-        self.a = self._recoger()
+        self.a = leer() | self._recoger()  # conserva claves que la app no muestra (p. ej. «nombre»)
         guardar(self.a)
         if panel_abierto():
             cerrar_panel()
