@@ -2,6 +2,8 @@
 
 Asistente de voz en español para Omarchy (Hyprland): pulsa Alt+Z, habla y te contesta mientras controla el escritorio.
 
+![App de ajustes «Asistente de voz» y la ventanita de la conversación](docs/captura.png)
+
 Whisper large-v3-turbo (oído, local) → reglas locales para órdenes habituales → `claude -p --model haiku` para el resto → Kokoro-82M (voz, local).
 
 - `asistente.py`: el servicio de Alt+Z (`sistema/systemd/voz-es.service`).
