@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Aura de colores en el borde de la pantalla (modo «aura» del asistente de voz). SIGTERM = apagar con fundido.
+# gtk4-layer-shell tiene que cargarse antes que libwayland: de ahí el LD_PRELOAD.
+LD_PRELOAD=/usr/lib/libgtk4-layer-shell.so exec /usr/bin/python3 ~/voz-es/aura.py

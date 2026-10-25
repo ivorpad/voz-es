@@ -17,8 +17,10 @@ import json
 import traceback
 import os
 import pwd
+import fcntl
 import re
 import shutil
+import struct
 import subprocess
 import threading
 import time
@@ -33,6 +35,7 @@ from modelos import VOZ, EnDirecto, oido, sintetizar, transcribir
 
 FIFO = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "voz-es.fifo"
 AJUSTES = Path.home() / ".config/voz-es/ajustes.json"
+NIVEL = FIFO.with_name("voz-es.nivel")  # nivel de audio (mic o voz) que lee la aura para moverse con el sonido
 SILENCIADO = FIFO.with_name("voz-es.silenciado")  # marca: los altavoces los silenció el asistente
 LOG = Path.home() / ".local/state/voz-es/conversacion.log"
 PANEL = "org.omarchy.voz-es"
@@ -351,6 +354,25 @@ def orden_directa(texto: str) -> list[tuple[str, dict]] | str | None:
 
 # ---------- audio ----------
 
+_nivel_fd = None
+
+
+def publicar_nivel(x: np.ndarray):
+    """Escribe el volumen (0..1, escala dB) de un trozo de audio en un fichero de 12 bytes que lee aura.py.
+    Lleva la hora: si deja de actualizarse, la aura lo da por silencio."""
+    global _nivel_fd
+    if not x.size:
+        return
+    try:
+        if _nivel_fd is None:
+            _nivel_fd = os.open(NIVEL, os.O_WRONLY | os.O_CREAT, 0o600)
+        rms = float(np.sqrt(np.mean(np.square(x, dtype=np.float32)))) + 1e-9
+        nivel = min(1.0, max(0.0, (20 * np.log10(rms) + 55) / 35))  # -55 dB → 0, -20 dB → 1
+        os.pwrite(_nivel_fd, struct.pack("<df", time.monotonic(), nivel), 0)
+    except OSError:
+        pass
+
+
 class Grabadora:
     def __init__(self):
         self.proc = None
@@ -375,6 +397,7 @@ class Grabadora:
         while chunk := proc.stdout.read1(3200):
             with self.lock:
                 self.buf += chunk
+            publicar_nivel(np.frombuffer(chunk[: len(chunk) // 2 * 2], np.int16).astype(np.float32) / 32_768)
 
     def audio(self) -> np.ndarray:
         with self.lock:
@@ -422,9 +445,19 @@ class Altavoz:
                 self.proc = subprocess.Popen(
                     ["pw-play", "--rate", "24000", "--channels", "1", "--format", "f32", "--raw", "-"],
                     stdin=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                try:  # tubería mínima: así escribir a trozos va al ritmo de lo que suena y la aura lo sigue
+                    fcntl.fcntl(self.proc.stdin.fileno(), 1031, 4096)  # F_SETPIPE_SZ
+                except OSError:
+                    pass
             try:
-                self.proc.stdin.write(audio.astype(np.float32).tobytes())
-                self.proc.stdin.flush()
+                audio = audio.astype(np.float32)
+                for i in range(0, len(audio), 1200):  # trozos de 50 ms
+                    if asistente.turno != turno:
+                        return
+                    trozo = audio[i:i + 1200]
+                    self.proc.stdin.write(trozo.tobytes())
+                    self.proc.stdin.flush()
+                    publicar_nivel(trozo)
             except BrokenPipeError:
                 return
 
@@ -656,6 +689,11 @@ class Asistente:
 
 
 def mostrar_panel():
+    modo = ajustes().get("modo", "ventanita")  # «ventanita», «aura» o «ambos»
+    if modo in ("aura", "ambos"):
+        sh(str(Path.home() / ".local/bin/voz-es-aura"))
+    if modo == "aura":
+        return
     try:
         clientes = json.loads(subprocess.run(["hyprctl", "clients", "-j"], capture_output=True, text=True).stdout)
     except json.JSONDecodeError:
@@ -667,6 +705,7 @@ def mostrar_panel():
 def cerrar_panel():
     # pkill y no hyprctl: así también cierra una ventanita que aún no ha terminado de abrirse
     subprocess.run(["pkill", "-f", f"app-id={PANEL}"])
+    subprocess.run(["pkill", "-TERM", "-f", "voz-es/aura.py"])  # la aura se apaga con un fundido y sale
 
 
 def main():

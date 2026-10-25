@@ -13,7 +13,8 @@ La ventanita que aparece abajo a la derecha al pulsar Alt+Z:
 Nemotron 3.5 ASR streaming (oído, local, el mismo modelo que Handy, vía transcribe.cpp/Vulkan; Whisper de respaldo) → reglas locales para órdenes habituales → `claude -p --model haiku` para el resto → Kokoro-82M (voz, local).
 
 - `asistente.py`: el servicio de Alt+Z (`sistema/systemd/voz-es.service`).
-- `ajustes.py`: app «Asistente de voz» (GTK4 + libadwaita) para posición, tamaño, opacidad y voz de la ventanita.
+- `ajustes.py`: app «Asistente de voz» (GTK4 + libadwaita) para elegir qué se ve (ventanita, aura o ambas) y la posición, tamaño, opacidad y voz de la ventanita.
+- `aura.py`: aura de colores alrededor de la pantalla, al estilo del nuevo Siri (GTK4 + gtk4-layer-shell, Python del sistema; se lanza con `sistema/bin/voz-es-aura`). Entra con ease-out expo, respira y gira los colores; al cerrar (SIGTERM) se apaga con un fundido ease-in-out y deja pasar el ratón.
 - `app.py`: versión web local (127.0.0.1:7861) con LFM2.5-1.2B.
 - `sistema/`: scripts de `~/.local/bin`, regla y atajo de Hyprland, entrada del lanzador.
 

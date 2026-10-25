@@ -19,11 +19,12 @@ AJUSTES = Path.home() / ".config/voz-es/ajustes.json"
 REGLA = Path.home() / ".config/hypr/voz_es.lua"
 PANEL = "org.omarchy.voz-es"
 
-POR_DEFECTO = {"posicion": "abajo-derecha", "margen": 40, "ancho": 440, "alto": 190,
+POR_DEFECTO = {"modo": "ventanita", "posicion": "abajo-derecha", "margen": 40, "ancho": 440, "alto": 190,
                "opacidad": 0.88, "fijar": True, "voz": "ef_dora", "velocidad": 1.0}
 POSICIONES = [("abajo-derecha", "Abajo a la derecha"), ("abajo-izquierda", "Abajo a la izquierda"),
               ("arriba-derecha", "Arriba a la derecha"), ("arriba-izquierda", "Arriba a la izquierda"),
               ("abajo-centro", "Abajo en el centro")]
+MODOS = [("ventanita", "Ventanita"), ("aura", "Aura de colores en el borde"), ("ambos", "Aura y ventanita")]
 VOCES = [("ef_dora", "Dora (mujer)"), ("em_alex", "Alex (hombre)"), ("em_santa", "Santa (hombre, grave)")]
 
 
@@ -79,6 +80,12 @@ def abrir_panel():
 
 def cerrar_panel():
     subprocess.run(["pkill", "-f", f"app-id={PANEL}"])
+    subprocess.run(["pkill", "-TERM", "-f", "voz-es/aura.py"])
+
+
+def abrir_aura():
+    subprocess.Popen([str(Path.home() / ".local/bin/voz-es-aura")], start_new_session=True,
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 class Ventana(Adw.ApplicationWindow):
@@ -88,6 +95,16 @@ class Ventana(Adw.ApplicationWindow):
         self.vista_previa = None
 
         pagina = Adw.PreferencesPage()
+
+        g = Adw.PreferencesGroup(title="Aspecto", description="Qué se ve al pulsar Alt+Z. El aura es el brillo "
+                                 "de colores alrededor de la pantalla, como el nuevo Siri.")
+        self.modo = Adw.ComboRow(title="Mostrar", model=Gtk.StringList.new([t for _, t in MODOS]))
+        self.modo.set_selected([k for k, _ in MODOS].index(self.a["modo"]) if self.a["modo"] in dict(MODOS) else 0)
+        g.add(self.modo)
+        self.reducir = Adw.SwitchRow(title="Aura quieta", subtitle="Sin giro de colores ni respiración",
+                                     active=bool(self.a.get("aura_reducir_movimiento")))
+        g.add(self.reducir)
+        pagina.add(g)
 
         g = Adw.PreferencesGroup(title="Ventanita", description="Aparece al pulsar Alt+Z. "
                                  "Para moverla a mano: Super + arrastrar con el ratón.")
@@ -147,7 +164,8 @@ class Ventana(Adw.ApplicationWindow):
         return fila
 
     def _recoger(self) -> dict:
-        return {"posicion": POSICIONES[self.posicion.get_selected()][0],
+        return {"modo": MODOS[self.modo.get_selected()][0], "aura_reducir_movimiento": self.reducir.get_active(),
+                "posicion": POSICIONES[self.posicion.get_selected()][0],
                 "margen": int(self.margen.get_value()), "ancho": int(self.ancho.get_value()),
                 "alto": int(self.alto.get_value()), "opacidad": round(self.opacidad.get_value(), 2),
                 "fijar": self.fijar.get_active(), "voz": VOCES[self.voz.get_selected()][0],
@@ -167,7 +185,11 @@ class Ventana(Adw.ApplicationWindow):
 
     def _probar(self, _b):
         self._aplicar()
-        if not panel_abierto():
+        modo = self.a["modo"]
+        if modo in ("aura", "ambos"):
+            subprocess.run(["pkill", "-TERM", "-f", "voz-es/aura.py"])
+            abrir_aura()
+        if modo != "aura" and not panel_abierto():
             abrir_panel()
         if self.vista_previa:
             GLib.source_remove(self.vista_previa)
@@ -186,6 +208,8 @@ class Ventana(Adw.ApplicationWindow):
             w.set_value(a[k])
         self.fijar.set_active(a["fijar"])
         self.voz.set_selected(0)
+        self.modo.set_selected(0)
+        self.reducir.set_active(False)
 
 
 def main():
